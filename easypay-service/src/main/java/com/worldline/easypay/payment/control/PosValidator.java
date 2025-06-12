@@ -20,24 +20,28 @@ public class PosValidator {
     public PosValidator(PosRefRepository posRefRepository) {
         this.posRefRepository = posRefRepository;
     }
-    
-    public boolean isActive(String posId) { 
+
+    public boolean isActive(String posId) {
         PosRef probe = new PosRef();
         probe.posId = posId;
-        List<PosRef> posList = posRefRepository.findAll(Example.of(probe));
-     
-        if (posList.isEmpty()) {
-            LOG.warn( "Check POS does not pass: unknown posId {}", posId);
-            return false;
+        try {
+            List<PosRef> posList = posRefRepository.findAll(Example.of(probe));
+
+            if (posList.isEmpty()) {
+                LOG.warn("Check POS does not pass: unknown posId {}", posId);
+                return false;
+            }
+
+            boolean result = posList.get(0).active;
+
+            if (!result) {
+                LOG.warn("Check POS does not pass: inactive posId {}", posId);
+            }
+
+            return result;
+        } catch (NullPointerException e) {
+            LOG.warn("Invalid value for this POS: {}", posId);
+            throw e;
         }
-
-        boolean result = posList.get(0).active;
-
-        if (!result) {
-            LOG.warn( "Check POS does not pass: inactive posId {}", posId);
-        }
-
-        return result;
-
     }
 }
